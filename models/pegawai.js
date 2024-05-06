@@ -12,8 +12,6 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       Pegawai.hasMany(models.Uuid, { foreignKey: 'nip_pegawai' });
-      Pegawai.hasMany(models.Peserta, { foreignKey: 'penanggungjawab' });
-      Pegawai.hasMany(models.Notulen, { foreignKey: 'penanggungjawab' });
       Pegawai.belongsTo(models.Perangkat_Daerah, { foreignKey: 'kode_opd' });
     }
   }
@@ -25,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     password: DataTypes.STRING,
     pangkat: DataTypes.STRING,
-    golongan: DataTypes.STRING,
+    nama_pangkat: DataTypes.STRING,
     jabatan: DataTypes.STRING,
     eselon: DataTypes.STRING,
     role: DataTypes.STRING,

@@ -10,9 +10,10 @@ router.delete("/deleteFile", NotulenController.deleteFile);
 router.use(authenticate);
 router.get("/getNotulenDetail/:id", NotulenController.getOneNotulen);
 router.get("/getAuthNotulen/:kode_opd/:tanggal_surat", NotulenController.getAuthNotulen);
-router.get('/getAgreement/:kode_opd/:bulan/:tahun', NotulenController.getNeedAgreement)
+router.get('/getAgreement/:kode_opd/:tanggal_surat', NotulenController.getNeedAgreement)
 router.get("/getAllNotulens/:kode_opd/:tanggal_surat", NotulenController.getAllNotulen);
-router.get('/showResponsible/:nip', NotulenController.showResponsibleNotulen);
+router.get('/showResponsible/:tanggal_surat', NotulenController.showResponsibleNotulen);
+router.put('/updateNotification/:id_notulen', NotulenController.updateStatusNotification)
 router.post("/addNotulen", NotulenController.addNotulen);
 router.put("/editNotulen/:id", NotulenController.editNotulen);
 router.put("/updateStatus/:id", NotulenController.updateStatus);

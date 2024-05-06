@@ -6,7 +6,7 @@ module.exports = {
     return queryInterface.addColumn(
       'Peserta',
       'tanggal',
-      Sequelize.JSON
+      Sequelize.STRING
     );
   },
 

@@ -10,8 +10,8 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
+      Notulen.hasOne(models.Notification, { foreignKey: 'id_notulen' });
       Notulen.belongsTo(models.Uuid, { foreignKey: 'uuid' });
-      Notulen.belongsTo(models.Pegawai, { foreignKey: 'penanggungjawab' });
     }
   }
   Notulen.init({
@@ -37,7 +37,6 @@ module.exports = (sequelize, DataTypes) => {
     signature_atasan: DataTypes.STRING(10000),
     keterangan: DataTypes.STRING,
     nip_atasan: DataTypes.STRING,
-    penanggungjawab: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Notulen',

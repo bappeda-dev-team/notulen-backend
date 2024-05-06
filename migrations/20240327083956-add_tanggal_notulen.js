@@ -6,7 +6,7 @@ module.exports = {
     return queryInterface.addColumn(
       'Notulens',
       'tanggal_surat',
-      Sequelize.STRING()
+      Sequelize.STRING
     );
   },
 

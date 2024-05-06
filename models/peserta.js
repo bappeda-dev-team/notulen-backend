@@ -10,16 +10,15 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
+      Peserta.hasOne(models.Notification, { foreignKey: 'id_peserta' });
       Peserta.belongsTo(models.Uuid, { foreignKey: 'uuid' });
-      Peserta.belongsTo(models.Pegawai, { foreignKey: 'penanggungjawab' });
     }
   }
   Peserta.init({
     uuid: DataTypes.STRING,
     jumlah_peserta: DataTypes.NUMBER,
     jenis_peserta: DataTypes.STRING,
-    tanggal: DataTypes.JSON,
-    penanggungjawab: DataTypes.STRING,
+    tanggal: DataTypes.STRING,
   }, {
     sequelize,
     modelName: 'Peserta',
