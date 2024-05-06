@@ -1,4 +1,14 @@
-const { Uuid, Perangkat_Daerah, Pegawai, Undangan, Peserta, Notulen, Tagging, Sasaran } = require('../models');
+const {
+  Uuid,
+  Perangkat_Daerah,
+  Pegawai,
+  Undangan,
+  Peserta,
+  Notulen,
+  Tagging,
+  Sasaran,
+  Notification
+} = require('../models');
 const { Op } = require("sequelize");
 
 class LaporanController {
@@ -280,14 +290,13 @@ class LaporanController {
             attributes: {
               exclude: ['createdAt', 'updatedAt']
             },
-            include: [
-              {
-                model: Pegawai,
-                attributes: {
-                  exclude: ['password', 'status', 'createdAt', 'updatedAt']
-                }
+            include: {
+              model: Notification,
+              required: false,
+              attributes: {
+                exclude: ['createdAt', 'updatedAt']
               }
-            ]
+            }
           },
           {
             model: Notulen,
@@ -297,18 +306,18 @@ class LaporanController {
                 [Op.not]: 'archieve'
               }
             },
-            include: [
-              {
-                model: Pegawai,
-                attributes: {
-                  exclude: ['password', 'status', 'createdAt', 'updatedAt']
-                }
-              }
-            ],
             attributes: {
               exclude: ['createdAt', 'updatedAt']
+            },
+            include: {
+              model: Notification,
+              required: false,
+              attributes: {
+                exclude: ['createdAt', 'updatedAt']
+              }
             }
-          }
+          },
+
         ]
       })
 
@@ -322,14 +331,84 @@ class LaporanController {
           },
         });
       } else {
-        res.status(200).json({
-          success: true,
-          data: {
-            code: 200,
-            message: "Success",
-            data: response,
-          },
-        });
+        let nipArr = [];
+        response.forEach(el => {
+          el.Peserta.forEach(el2 => {
+            if (el2.Notification !== null) {
+              nipArr.push(el2.Notification.nip_penanggungjawab_peserta);
+            }
+          })
+          el.Notulens.forEach(el2 => {
+            if (el2.Notification !== null) {
+              nipArr.push(el2.Notification.nip_penanggungjawab_notulen)
+            }
+          })
+        })
+        Pegawai.findAll({
+          where: { nip: nipArr }
+        })
+          .then(resPegawai => {
+            response.map(entry => {
+              const Peserta = entry.Peserta.map(peserta => {
+                if (peserta.Notification !== null) {
+                  const pegawai = resPegawai.find(p => p.nip === peserta.Notification.nip_penanggungjawab_peserta);
+                  if (pegawai) {
+                    peserta.dataValues.Notification.dataValues.Penanggungjawab = {
+                      nama: pegawai.nama,
+                      nip: pegawai.nip,
+                      pangkat: pegawai.pangkat,
+                      nama_pangkat: pegawai.nama_pangkat,
+                      jabatan: pegawai.jabatan,
+                      eselon: pegawai.eselon,
+                      role: pegawai.role,
+                    };
+                  }
+                  return peserta;
+                }
+              });
+
+              const Notulen = entry.Notulens.map(notulen => {
+                if (notulen.Notification !== null) {
+                  const pegawai = resPegawai.find(p => p.nip === notulen.Notification.nip_penanggungjawab_notulen);
+                  if (pegawai) {
+                    notulen.dataValues.Notification.dataValues.Penanggungjawab = {
+                      nama: pegawai.nama,
+                      nip: pegawai.nip,
+                      pangkat: pegawai.pangkat,
+                      nama_pangkat: pegawai.nama_pangkat,
+                      jabatan: pegawai.jabatan,
+                      eselon: pegawai.eselon,
+                      role: pegawai.role,
+                    };
+                  }
+                }
+              })
+
+              entry.Peserta = Peserta;
+              entry.Notulen = Notulen;
+
+              return entry;
+            });
+
+            res.status(200).json({
+              success: true,
+              data: {
+                code: 200,
+                message: "Success",
+                data: response,
+              },
+            });
+          })
+          .catch(err => {
+            res.status(500).json({
+              success: false,
+              data: {
+                code: 500,
+                message: "Internal server error",
+                data: err.message,
+              },
+            });
+          })
       }
     } catch (err) {
       res.status(500).json({

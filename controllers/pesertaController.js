@@ -4,49 +4,87 @@ const {
   Perangkat_Daerah,
   Pegawai,
   Undangan,
+  Notification
 } = require('../models');
+const { Op } = require("sequelize");
 
 class PesertaController {
   static showResponsiblePeserta = async (req, res) => {
     try {
-      const response = await Peserta.findAll({
+      const response = await Notification.findAll({
         where: {
-          penanggungjawab: req.params.nip
+          nip_penanggungjawab_peserta: {
+            [Op.eq]: req.decoded.nip
+          },
         },
-        order: [['createdAt', 'DESC']],
-        attributes: {
-          exclude: ['createdAt', 'updatedAt']
-        },
+        order: [["createdAt", "DESC"]],
+        attributes: ['nip_penanggungjawab_peserta', 'status_notification_peserta'],
         include: [
           {
-            model: Uuid,
+            model: Peserta,
+            where: {
+              tanggal: {
+                [Op.like]: `%${decodeURIComponent(req.params.tanggal_surat)}%`
+              }
+            },
             attributes: {
               exclude: ['createdAt', 'updatedAt']
             },
+          },
+          {
+            model: Uuid,
+            attributes: {
+              exclude: ['createdAt', 'updatedAt', 'uuid']
+            },
             include: [
-              {
-                model: Perangkat_Daerah,
-                attributes: ['kode_opd', 'nama_opd', 'singkatan']
-              },
               {
                 model: Pegawai,
                 attributes: {
-                  exclude: ['createdAt', 'updatedAt', 'password']
+                  exclude: ['password', 'createdAt', 'updatedAt']
                 }
+              },
+              {
+                model: Undangan,
+                attributes: ['acara', 'lokasi', 'tanggal', 'waktu']
               }
             ]
           }
         ]
       })
 
-      res.status(200).json({
-        success: true,
-        data: {
-          code: 200,
-          message: "Success",
-          data: response,
-        },
-      });
+      if (response === null) {
+        res.status(404).json({
+          success: false,
+          data: {
+            code: 404,
+            message: "Notifikasi daftar hadir tidak ditemukan!",
+            data: response,
+          },
+        });
+      } else {
+        let output = [];
+        response.forEach(el => {
+          output.push({
+            status: el.dataValues.status_notification_peserta,
+            Undangan: {
+              acara: el.dataValues.Uuid.dataValues.Undangan.dataValues.acara,
+              lokasi: el.dataValues.Uuid.dataValues.Undangan.dataValues.lokasi,
+              tanggal: el.dataValues.Uuid.dataValues.Undangan.dataValues.tanggal,
+              waktu: el.dataValues.Uuid.dataValues.Undangan.dataValues.waktu
+            },
+            Peserta: el.dataValues.Pesertum,
+            Pelapor: el.dataValues.Uuid.dataValues.Pegawai
+          })
+        })
+        res.status(200).json({
+          success: true,
+          data: {
+            code: 200,
+            message: "Success",
+            data: output,
+          },
+        });
+      }
     } catch (err) {
       res.status(500).json({
         success: false,
@@ -62,9 +100,7 @@ class PesertaController {
   static getOnePeserta = async (req, res) => {
     try {
       const response = await Peserta.findOne({
-        where: {
-          id: +req.params.id,
-        },
+        where: { id: +req.params.id },
         attributes: {
           exclude: ['createdAt', 'updatedAt']
         },
@@ -89,12 +125,14 @@ class PesertaController {
               },
               {
                 model: Undangan,
-                attributes: {
-                  exclude: ['createdAt', 'updatedAt']
-                }
-              },
+                attributes: ['acara', 'lokasi', 'tanggal', 'waktu']
+              }
             ]
-          }
+          },
+          {
+            model: Notification,
+            attributes: ['nip_penanggungjawab_peserta', 'status_notification_peserta']
+          },
         ]
       })
 
@@ -108,14 +146,40 @@ class PesertaController {
           },
         });
       } else {
-        res.status(200).json({
-          success: true,
-          data: {
-            code: 200,
-            message: "Success",
-            data: response,
-          },
-        });
+        if (response.dataValues.Notification.dataValues.nip_penanggungjawab_peserta !== null) {
+          Pegawai.findOne({
+            where: { nip: response.dataValues.Notification.dataValues.nip_penanggungjawab_peserta }
+          })
+            .then(pegawai => {
+              response.dataValues.Notification.dataValues.Penanggungjawab = {
+                nama: pegawai.nama,
+                nip: pegawai.nip,
+                pangkat: pegawai.pangkat,
+                nama_pangkat: pegawai.nama_pangkat,
+                jabatan: pegawai.jabatan,
+                eselon: pegawai.eselon,
+                role: pegawai.role,
+              };
+
+              res.status(200).json({
+                success: true,
+                data: {
+                  code: 200,
+                  message: "Success",
+                  data: response,
+                },
+              });
+            })
+        } else {
+          res.status(200).json({
+            success: true,
+            data: {
+              code: 200,
+              message: "Success",
+              data: response,
+            },
+          });
+        }
       }
     } catch (err) {
       res.status(500).json({
@@ -147,11 +211,18 @@ class PesertaController {
             jumlah_peserta: req.body.jumlah_peserta,
             jenis_peserta: req.body.jenis_peserta,
             tanggal: req.body.tanggal,
-            penanggungjawab: req.body.penanggungjawab
           }
-
           Peserta.create(payload)
             .then(response => {
+              if (req.body.nip_penanggungjawab_peserta !== null) {
+                const payload2 = {
+                  uuid: req.body.uuid,
+                  id_peserta: response.id,
+                  status_notification_peserta: 'unread',
+                  nip_penanggungjawab_peserta: req.body.nip_penanggungjawab_peserta
+                }
+                Notification.create(payload2)
+              }
               res.status(201).json({
                 success: true,
                 data: {
@@ -162,7 +233,6 @@ class PesertaController {
               });
             })
             .catch(err => {
-              console.log(err);
               if (err.name === "SequelizeDatabaseError") {
                 res.status(400).json({
                   success: false,
@@ -207,14 +277,14 @@ class PesertaController {
   static editPeserta = async (req, res) => {
     try {
       const payload = {
-        uuid: req.body.uuid,
         jumlah_peserta: req.body.jumlah_peserta,
         jenis_peserta: req.body.jenis_peserta,
         tanggal: req.body.tanggal
       }
 
       const response = await Peserta.update(payload, {
-        where: { id: +req.params.id }
+        where: { id: +req.params.id },
+        returning: true
       })
 
       if (response[0] == 0) {
@@ -226,14 +296,36 @@ class PesertaController {
           },
         });
       } else {
-        res.status(200).json({
-          success: true,
-          data: {
-            code: 200,
-            message: "Berhasil update data Daftar Hadir",
-            data: response,
+        const payload2 = {
+          nip_penanggungjawab_peserta: req.body.nip_penanggungjawab_peserta
+        }
+
+        Notification.update(payload2, {
+          where: {
+            id_peserta: response[1][0]?.dataValues.id
           },
-        });
+          returning: true
+        })
+          .then(data => {
+            res.status(200).json({
+              success: true,
+              data: {
+                code: 200,
+                message: "Success",
+                data: data,
+              },
+            });
+          })
+          .catch(err => {
+            res.status(500).json({
+              success: false,
+              data: {
+                code: 500,
+                message: "Internal server error",
+                data: err,
+              },
+            });
+          })
       }
     } catch (err) {
       res.status(500).json({
