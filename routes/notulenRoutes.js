@@ -27,3 +27,4 @@ router.get('/getArchieve', NotulenController.getArchieveNotulen);
 router.delete('/deleteNotulen/:id', NotulenController.deleteNotulen)
 
 module.exports = router;
+
