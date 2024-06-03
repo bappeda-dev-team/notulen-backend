@@ -120,6 +120,7 @@ class PegawaiController {
   }
 
   static getProfile = async (req, res) => {
+    console.log(req, '/.,/.,');
     try {
       const data = req.decoded;
 
@@ -210,7 +211,6 @@ class PegawaiController {
         })
       }
     } catch (err) {
-      console.log(err.message, '///');
       res.status(500).json({
         success: false,
         data: {
@@ -376,7 +376,15 @@ class PegawaiController {
               code: 200,
               message: "Success",
               data: {
-                access_token
+                accessToken: access_token,
+                user: {
+                  nama: user.nama,
+                  nip: user.nip,
+                  pangkat: user.pangkat,
+                  namaPangkat: user.nama_pangkat,
+                  posisi: user.jabatan,
+                  role: user.role,
+                }
               }
             }
           })

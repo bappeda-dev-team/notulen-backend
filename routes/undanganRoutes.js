@@ -13,3 +13,4 @@ router.get('/getArchieve', UndanganController.getArchieveUndangan);
 router.delete('/deleteUndangan/:id', UndanganController.deleteUndangan);
 
 module.exports = router;
+
