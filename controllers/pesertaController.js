@@ -233,6 +233,7 @@ class PesertaController {
               });
             })
             .catch(err => {
+              console.log(err, 'peserta');
               if (err.name === "SequelizeDatabaseError") {
                 res.status(400).json({
                   success: false,
@@ -263,6 +264,7 @@ class PesertaController {
             })
         })
     } else {
+      console.log(err);
       res.status(401).json({
         success: false,
         data: {
