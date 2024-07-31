@@ -19,8 +19,9 @@ module.exports = {
         {
           nama: "admin",
           nip: "bapppeko",
-          password: hashPassword('23456789'),
-          pangkat: "Pembina Utama",
+          password: hashPassword("23456789"),
+          pangkat: "IV/e",
+          nama_pangkat: "Pembina Utama",
           golongan: "IV/e",
           jabatan: "super_admin",
           role: 1,
@@ -29,7 +30,7 @@ module.exports = {
           updatedAt: new Date(),
         },
       ],
-      {}
+      {},
     );
   },
 
