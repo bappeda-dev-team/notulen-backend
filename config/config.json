@@ -1,7 +1,6 @@
 {
   "development": {
     "use_env_variable": "DATABASE_URL",
-    "url": "postgresql://127.0.0.1:5432/enotulen",
     "dialect": "postgres"
   },
   "test": {

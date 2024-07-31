@@ -1,43 +1,51 @@
-const { Pegawai, Perangkat_Daerah } = require('../models');
-const { hashPassword, comparePassword } = require('../helpers/bcrypt');
-const { generateToken } = require('../helpers/jwt');
-const axios = require('axios');
+const { Pegawai, Perangkat_Daerah } = require("../models");
+const { hashPassword, comparePassword } = require("../helpers/bcrypt");
+const { generateToken } = require("../helpers/jwt");
+const axios = require("axios");
 
 class PegawaiController {
   static getAllPegawai = async (req, res) => {
     try {
       if (req.decoded.role == 1) {
         const response = await Pegawai.findAll({
-          include: [{
-            model: Perangkat_Daerah,
-            attributes: ['nama_opd']
-          }],
+          include: [
+            {
+              model: Perangkat_Daerah,
+              attributes: ["nama_opd"],
+            },
+          ],
           attributes: {
-            exclude: ['password'],
-          }
-        })
+            exclude: ["password"],
+          },
+        });
 
         res.status(200).json({
           success: true,
           data: {
             code: 200,
-            message: 'Success',
-            data: response
-          }
-        })
-      } else if (req.decoded.role == 2 || req.decoded.role == 3 || req.decoded.role == 4) {
+            message: "Success",
+            data: response,
+          },
+        });
+      } else if (
+        req.decoded.role == 2 ||
+        req.decoded.role == 3 ||
+        req.decoded.role == 4
+      ) {
         const response = await Pegawai.findAll({
           where: {
-            kode_opd: req.params.kode_opd
+            kode_opd: req.params.kode_opd,
           },
-          include: [{
-            model: Perangkat_Daerah,
-            attributes: ['nama_opd']
-          }],
+          include: [
+            {
+              model: Perangkat_Daerah,
+              attributes: ["nama_opd"],
+            },
+          ],
           attributes: {
-            exclude: ['password'],
-          }
-        })
+            exclude: ["password"],
+          },
+        });
 
         if (response === null) {
           res.status(404).json({
@@ -73,12 +81,12 @@ class PegawaiController {
         success: false,
         data: {
           code: 500,
-          message: 'Internal server error',
-          data: err.message
-        }
-      })
+          message: "Internal server error",
+          data: err.message,
+        },
+      });
     }
-  }
+  };
 
   static getAllPelapor = async (req, res) => {
     try {
@@ -88,14 +96,14 @@ class PegawaiController {
         response = await Pegawai.findAll({
           where: {
             kode_opd: req.params.kode_opd,
-            role: 3
-          }
-        })
+            role: 3,
+          },
+        });
       } else if (type === "all") {
         response = await Pegawai.findAll({
           where: {
-            kode_opd: req.params.kode_opd
-          }
+            kode_opd: req.params.kode_opd,
+          },
         });
       }
 
@@ -103,24 +111,24 @@ class PegawaiController {
         success: true,
         data: {
           code: 200,
-          message: 'Success',
-          data: response
-        }
-      })
+          message: "Success",
+          data: response,
+        },
+      });
     } catch (err) {
       res.status(500).json({
         success: false,
         data: {
           code: 500,
-          message: 'Internal server error',
-          data: err
-        }
-      })
+          message: "Internal server error",
+          data: err,
+        },
+      });
     }
-  }
+  };
 
   static getProfile = async (req, res) => {
-    console.log(req, '/.,/.,');
+    console.log(req, "/.,/.,");
     try {
       const data = req.decoded;
 
@@ -128,64 +136,66 @@ class PegawaiController {
         success: true,
         data: {
           code: 200,
-          message: 'Success',
-          data: data
-        }
-      })
+          message: "Success",
+          data: data,
+        },
+      });
     } catch (err) {
       res.status(500).json({
         success: false,
         data: {
           code: 500,
-          message: 'Internal server error',
-          data: err
-        }
-      })
+          message: "Internal server error",
+          data: err,
+        },
+      });
     }
-  }
+  };
 
   static getOnePegawai = async (req, res) => {
     try {
       const response = await Pegawai.findOne({
         where: { nip: req.params.nip },
         attributes: {
-          exclude: ['password', 'createdAt', 'updatedAt']
+          exclude: ["password", "createdAt", "updatedAt"],
         },
-        include: [{
-          model: Perangkat_Daerah,
-        }]
-      })
+        include: [
+          {
+            model: Perangkat_Daerah,
+          },
+        ],
+      });
 
       if (response === null) {
         res.status(404).json({
           success: false,
           data: {
             code: 404,
-            message: 'ID pegawai tidak ditemukan!',
-            data: response
-          }
-        })
+            message: "ID pegawai tidak ditemukan!",
+            data: response,
+          },
+        });
       } else {
         res.status(200).json({
           success: true,
           data: {
             code: 200,
-            message: 'Success',
-            data: response
-          }
-        })
+            message: "Success",
+            data: response,
+          },
+        });
       }
     } catch (err) {
       res.status(500).json({
         success: false,
         data: {
           code: 500,
-          message: 'Internal server error',
-          data: err.message
-        }
-      })
+          message: "Internal server error",
+          data: err.message,
+        },
+      });
     }
-  }
+  };
 
   static syncDataPegawai = async (req, res) => {
     const currentDate = new Date();
@@ -193,34 +203,34 @@ class PegawaiController {
 
     try {
       const fetchPegawai = await axios({
-        method: 'post',
+        method: "post",
         url: `https://kak.madiunkota.go.id/api/opd/daftar_pegawai.json`,
         data: {
-          kode_opd: req.params.kode_opd
-        }
-      })
+          kode_opd: req.params.kode_opd,
+        },
+      });
 
       if (fetchPegawai.data.status) {
         res.status(200).json({
           success: true,
           data: {
             code: 200,
-            message: 'Success',
-            data: fetchPegawai.data.data
-          }
-        })
+            message: "Success",
+            data: fetchPegawai.data.data,
+          },
+        });
       }
     } catch (err) {
       res.status(500).json({
         success: false,
         data: {
           code: 500,
-          message: 'Internal server error',
-          data: err
-        }
-      })
+          message: "Internal server error",
+          data: err,
+        },
+      });
     }
-  }
+  };
 
   static addPegawai = async (req, res) => {
     try {
@@ -233,7 +243,7 @@ class PegawaiController {
         jabatan: req.body.jabatan,
         role: req.body.role,
         kode_opd: req.body.kode_opd,
-      }
+      };
 
       const response = await Pegawai.create(payload);
 
@@ -241,40 +251,40 @@ class PegawaiController {
         success: true,
         data: {
           code: 201,
-          message: 'Data tagging berhasil ditambahkan',
-          data: response
-        }
-      })
+          message: "Data tagging berhasil ditambahkan",
+          data: response,
+        },
+      });
     } catch (err) {
-      if (err.name === 'SequelizeDatabaseError') {
+      if (err.name === "SequelizeDatabaseError") {
         res.status(400).json({
           success: false,
           data: {
             code: 400,
-            message: 'Periksa kembali data Anda!',
-            data: err.message
-          }
-        })
-      } else if (err.name === 'SequelizeUniqueConstraintError') {
+            message: "Periksa kembali data Anda!",
+            data: err.message,
+          },
+        });
+      } else if (err.name === "SequelizeUniqueConstraintError") {
         res.status(400).json({
           success: false,
           data: {
             code: 400,
-            message: 'NIK sudah terdaftar'
-          }
-        })
+            message: "NIK sudah terdaftar",
+          },
+        });
       } else {
         res.status(500).json({
           success: false,
           data: {
             code: 500,
-            message: 'Internal server error',
-            data: err
-          }
-        })
+            message: "Internal server error",
+            data: err,
+          },
+        });
       }
     }
-  }
+  };
 
   static updatePegawai = async (req, res) => {
     try {
@@ -288,77 +298,81 @@ class PegawaiController {
         role: req.body.role,
         status: req.body.status,
         kode_opd: req.body.kode_opd,
-      }
+      };
 
       const response = await Pegawai.update(payload, {
-        where: { nip: req.params.nip }
+        where: { nip: req.params.nip },
       });
 
       res.status(201).json({
         success: true,
         data: {
           code: 201,
-          message: 'Data tagging berhasil ditambahkan',
-          data: response
-        }
-      })
+          message: "Data tagging berhasil ditambahkan",
+          data: response,
+        },
+      });
     } catch (err) {
-      console.log(err, '>>>');
-      if (err.name === 'SequelizeDatabaseError') {
+      console.log(err, ">>>");
+      if (err.name === "SequelizeDatabaseError") {
         res.status(400).json({
           success: false,
           data: {
             code: 400,
-            message: 'Periksa kembali data Anda!',
-            data: err.message
-          }
-        })
-      } else if (err.name === 'SequelizeUniqueConstraintError') {
+            message: "Periksa kembali data Anda!",
+            data: err.message,
+          },
+        });
+      } else if (err.name === "SequelizeUniqueConstraintError") {
         res.status(400).json({
           success: false,
           data: {
             code: 400,
-            message: 'NIK sudah terdaftar'
-          }
-        })
+            message: "NIK sudah terdaftar",
+          },
+        });
       } else {
         res.status(500).json({
           success: false,
           data: {
             code: 500,
-            message: 'Internal server error',
-            data: err
-          }
-        })
+            message: "Internal server error",
+            data: err,
+          },
+        });
       }
     }
-  }
+  };
 
   static login = async (req, res) => {
     try {
       const user = await Pegawai.findOne({
-        where: { nip: req.body.nip }
-      })
+        where: { nip: req.body.nip },
+      });
+      console.log(req.body);
 
       if (!user) {
         res.status(404).json({
           success: false,
           data: {
             code: 404,
-            message: 'NIP tidak ditemukan'
-          }
-        })
+            message: "NIP tidak ditemukan",
+          },
+        });
       } else {
-        const comparedPassword = comparePassword(req.body.password, user.dataValues.password);
+        const comparedPassword = comparePassword(
+          req.body.password,
+          user.dataValues.password,
+        );
 
         if (!comparedPassword) {
           res.status(400).json({
             success: false,
             data: {
               code: 400,
-              message: 'Password yang Anda masukkan salah'
-            }
-          })
+              message: "Password yang Anda masukkan salah",
+            },
+          });
         } else {
           const access_token = generateToken({
             id: user.id,
@@ -368,7 +382,7 @@ class PegawaiController {
             namaPangkat: user.nama_pangkat,
             posisi: user.jabatan,
             role: user.role,
-          })
+          });
 
           res.status(200).json({
             success: true,
@@ -384,10 +398,10 @@ class PegawaiController {
                   namaPangkat: user.nama_pangkat,
                   posisi: user.jabatan,
                   role: user.role,
-                }
-              }
-            }
-          })
+                },
+              },
+            },
+          });
         }
       }
     } catch (err) {
@@ -396,11 +410,11 @@ class PegawaiController {
         data: {
           code: 500,
           message: "Internet server error",
-          data: err.message
-        }
-      })
+          data: err.message,
+        },
+      });
     }
-  }
+  };
 }
 
 module.exports = PegawaiController;
